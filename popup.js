@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     confirmGroupsBtn: document.getElementById('confirm-groups'),
     startCollectionBtn: document.getElementById('start-collection'),
     exportDataBtn: document.getElementById('export-data'),
+    toggleConsoleBtn: document.getElementById('toggle-console'),
     groupList: document.getElementById('groupList'),
     selectedGroupsList: document.getElementById('selectedGroupsList'),
     step1Div: document.getElementById('step1'),
@@ -28,7 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchGroups: fetchFacebookGroups,
     confirmGroups: confirmSelectedGroups,
     startCollection: startDataCollection,
-    exportData: exportCollectedData
+    exportData: exportCollectedData,
+    toggleConsole: toggleConsoleLogger
   };
   
   // Load modules
@@ -49,6 +51,18 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.confirmGroupsBtn.addEventListener('click', confirmSelectedGroups);
     elements.startCollectionBtn.addEventListener('click', startDataCollection);
     elements.exportDataBtn.addEventListener('click', exportCollectedData);
+    elements.toggleConsoleBtn.addEventListener('click', toggleConsoleLogger);
+  }
+  
+  // Function to toggle the console logger
+  function toggleConsoleLogger() {
+    if (window.ConsoleLoggerModule) {
+      window.ConsoleLoggerModule.toggleVisibility();
+      console.log('Console logger visibility toggled');
+    } else {
+      console.log('Console logger module not loaded');
+      alert('Console logger is not available. Please refresh the page and try again.');
+    }
   }
   
   // Fallback function to load saved state
@@ -86,7 +100,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'module/storage-module.js',
         'module/group-module.js',
         'module/data-collection-module.js',
-        'module/ui-module.js'
+        'module/ui-module.js',
+        'module/console-logger-module.js'
       ];
       
       let loadedCount = 0;
@@ -96,6 +111,13 @@ document.addEventListener('DOMContentLoaded', function() {
         script.src = module;
         script.onload = function() {
           loadedCount++;
+          
+          // Initialize console logger as soon as it's loaded
+          if (module.includes('console-logger-module.js') && window.ConsoleLoggerModule) {
+            window.ConsoleLoggerModule.init(true, 200);
+            window.ConsoleLoggerModule.loadState();
+          }
+          
           if (loadedCount === modules.length) {
             resolve();
           }
@@ -118,6 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Function to fetch Facebook groups
   function fetchFacebookGroups() {
     console.log('Fetching Facebook groups...');
+    console.info('Opening Facebook Groups page in a new tab');
     elements.statusText.textContent = 'Navigating to Facebook Groups page...';
     elements.statusDiv.style.display = 'block';
     
@@ -266,7 +289,10 @@ document.addEventListener('DOMContentLoaded', function() {
   function startDataCollection() {
     const postCount = parseInt(elements.postCountInput.value);
     
+    console.log(`Starting data collection with post count: ${postCount}`);
+    
     if (isNaN(postCount) || postCount < 1) {
+      console.error('Invalid post count entered');
       alert('Please enter a valid number of posts to collect.');
       return;
     }
@@ -447,8 +473,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Function to export collected data
   function exportCollectedData() {
+    console.log('Preparing to export collected data');
+    
     // If we don't have data in memory, try to load from storage
     if (collectedData.length === 0) {
+      console.info('No data in memory, attempting to load from storage');
       if (window.StorageModule) {
         window.StorageModule.getData('collectedData').then(response => {
           if (response.success && response.data && response.data.length > 0) {

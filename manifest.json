@@ -20,6 +20,7 @@
     {
       "matches": ["https://*.facebook.com/*"],
       "js": ["lib/papaparse.min.js", "content.js"],
+      "css": ["css/console-logger.css"],
       "all_frames": true
     }
   ],
@@ -32,11 +33,12 @@
     {
       "resources": [
         "icons/*",
-        "module/utility-module.js",
-        "module/storage-module.js",
-        "module/group-module.js",
-        "module/data-collection-module.js",
-        "module/ui-module.js"
+        "modmodule/ule/utility-module.js",
+        "module/module/storage-module.js",
+        "module/module/group-module.js",
+        "module/module/data-collection-module.js",
+        "module/ui-module.js",
+        "module/console-loggermodule/ui-module.js"
       ],
       "matches": ["<all_urls>"]
     }
