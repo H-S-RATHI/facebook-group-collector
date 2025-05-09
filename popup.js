@@ -82,11 +82,11 @@ document.addEventListener('DOMContentLoaded', function() {
     return new Promise((resolve) => {
       // Load modules in sequence
       const modules = [
-        'utility-module.js',
-        'storage-module.js',
-        'group-module.js',
-        'data-collection-module.js',
-        'ui-module.js'
+        'module/utility-module.js',
+        'module/storage-module.js',
+        'module/group-module.js',
+        'module/data-collection-module.js',
+        'module/ui-module.js'
       ];
       
       let loadedCount = 0;

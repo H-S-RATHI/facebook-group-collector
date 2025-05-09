@@ -28,6 +28,53 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 function loadModules() {
   // Create script elements for each module
   const modules = [
+    'module/utility-module.js',
+    'module/storage-module.js',
+    'module/group-module.js',
+    'module/data-collection-module.js'
+  ];
+  
+  modules.forEach(module => {
+    const script = document.createElement('script');
+    script.src = chrome.runtime.getURL(module);
+    script.onload = function() {
+      this.remove();
+    };
+    (document.head || document.documentElement).appendChild(script);
+  });
+}
+
+// Load modules when content script is initialized
+loadModules();// Content script for Facebook Group Data Collector
+console.log('Facebook Group Data Collector content script loaded');
+
+// Listen for messages from the popup or background script
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+  console.log('Content script received message:', message);
+  
+  if (message.action === 'fetchGroups') {
+    GroupModule.fetchGroups().then(groups => {
+      sendResponse({ success: true, groups: groups });
+    }).catch(error => {
+      sendResponse({ success: false, error: error.message });
+    });
+    return true; // Indicates async response
+  }
+  
+  if (message.action === 'collectData') {
+    DataCollectionModule.collectData(message.postCount).then(data => {
+      sendResponse({ success: true, data: data });
+    }).catch(error => {
+      sendResponse({ success: false, error: error.message });
+    });
+    return true; // Indicates async response
+  }
+});
+
+// Load modules
+function loadModules() {
+  // Create script elements for each module
+  const modules = [
     'utility-module.js',
     'storage-module.js',
     'group-module.js',

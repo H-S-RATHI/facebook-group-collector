@@ -32,11 +32,11 @@
     {
       "resources": [
         "icons/*",
-        "utility-module.js",
-        "storage-module.js",
-        "group-module.js",
-        "data-collection-module.js",
-        "ui-module.js"
+        "module/utility-module.js",
+        "module/storage-module.js",
+        "module/group-module.js",
+        "module/data-collection-module.js",
+        "module/ui-module.js"
       ],
       "matches": ["<all_urls>"]
     }
