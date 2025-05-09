@@ -7,29 +7,58 @@ const ConsoleLoggerModule = {
    * @param {number} maxLogs - Maximum number of logs to keep
    */
   init: function(showTimestamp = true, maxLogs = 100) {
-    // Store original console methods
-    this.originalConsole = {
-      log: console.log,
-      info: console.info,
-      warn: console.warn,
-      error: console.error,
-      debug: console.debug
-    };
-    
     this.showTimestamp = showTimestamp;
     this.maxLogs = maxLogs;
-    this.logs = [];
     
     // Create the logger UI if it doesn't exist
     if (!document.getElementById('custom-console-logger')) {
       this.createLoggerUI();
     }
     
-    // Override console methods
-    this.overrideConsoleMethods();
+    // Register as a listener for global logs
+    if (window.GlobalLogger) {
+      // Get existing logs
+      this.logs = window.GlobalLogger.getLogs();
+      
+      // Add listener for new logs
+      window.GlobalLogger.addListener(this.handleNewLogEntry.bind(this));
+      
+      console.log('Console logger UI initialized and connected to global logger');
+    } else {
+      console.error('Global logger not found. Console logger will not work properly.');
+      this.logs = [];
+    }
     
-    // Log initialization
-    console.log('Custom console logger initialized');
+    // Force an update of the log display
+    this.updateLogDisplay();
+    
+    // Make sure the logger is visible by default
+    if (this.container) {
+      this.container.style.display = 'flex';
+      if (this.showButton) {
+        this.showButton.style.display = 'none';
+      }
+    }
+  },
+  
+  /**
+   * Handle a new log entry from the global logger
+   * @param {Object} logEntry - The log entry object
+   */
+  handleNewLogEntry: function(logEntry) {
+    if (logEntry.type === 'clear') {
+      this.logs = [];
+    } else {
+      this.logs.push(logEntry);
+      
+      // Trim logs if exceeding max
+      if (this.logs.length > this.maxLogs) {
+        this.logs.shift();
+      }
+    }
+    
+    // Update the display
+    this.updateLogDisplay();
   },
   
   /**
@@ -154,125 +183,100 @@ const ConsoleLoggerModule = {
   },
   
   /**
-   * Override the default console methods
-   */
-  overrideConsoleMethods: function() {
-    const self = this;
-    
-    console.log = function() {
-      self.originalConsole.log.apply(console, arguments);
-      self.addLogEntry('log', Array.from(arguments));
-    };
-    
-    console.info = function() {
-      self.originalConsole.info.apply(console, arguments);
-      self.addLogEntry('info', Array.from(arguments));
-    };
-    
-    console.warn = function() {
-      self.originalConsole.warn.apply(console, arguments);
-      self.addLogEntry('warn', Array.from(arguments));
-    };
-    
-    console.error = function() {
-      self.originalConsole.error.apply(console, arguments);
-      self.addLogEntry('error', Array.from(arguments));
-    };
-    
-    console.debug = function() {
-      self.originalConsole.debug.apply(console, arguments);
-      self.addLogEntry('debug', Array.from(arguments));
-    };
-  },
-  
-  /**
-   * Add a log entry to the logger
+   * Add a log entry directly (for internal use)
    * @param {string} type - The type of log (log, info, warn, error, debug)
-   * @param {Array} args - The arguments passed to the console method
+   * @param {string} message - The message to log
    */
-  addLogEntry: function(type, args) {
-    // Create log entry
-    const timestamp = new Date().toISOString().split('T')[1].split('Z')[0];
-    const formattedArgs = args.map(arg => {
-      if (typeof arg === 'object') {
-        try {
-          return JSON.stringify(arg);
-        } catch (e) {
-          return String(arg);
-        }
+  addInternalLogEntry: function(type, message) {
+    if (window.GlobalLogger) {
+      // Use the global logger
+      switch (type) {
+        case 'log':
+          window.GlobalLogger.log(message);
+          break;
+        case 'info':
+          window.GlobalLogger.info(message);
+          break;
+        case 'warn':
+          window.GlobalLogger.warn(message);
+          break;
+        case 'error':
+          window.GlobalLogger.error(message);
+          break;
+        case 'debug':
+          window.GlobalLogger.debug(message);
+          break;
       }
-      return String(arg);
-    }).join(' ');
-    
-    const logEntry = {
-      type,
-      timestamp,
-      message: formattedArgs
-    };
-    
-    // Add to logs array
-    this.logs.push(logEntry);
-    
-    // Trim logs if exceeding max
-    if (this.logs.length > this.maxLogs) {
-      this.logs.shift();
+    } else {
+      // Fallback if global logger is not available
+      const timestamp = new Date().toISOString().split('T')[1].split('Z')[0];
+      const logEntry = {
+        type,
+        timestamp,
+        message
+      };
+      
+      this.logs.push(logEntry);
+      
+      // Trim logs if exceeding max
+      if (this.logs.length > this.maxLogs) {
+        this.logs.shift();
+      }
+      
+      // Update UI immediately
+      this.updateLogDisplay();
     }
-    
-    // Update UI
-    this.updateLogDisplay();
-    
-    // Save to session storage
-    this.saveState();
   },
   
   /**
    * Update the log display
    */
   updateLogDisplay: function() {
-    if (!this.logContainer) return;
+    if (!this.logContainer) {
+      if (this.originalConsole) {
+        this.originalConsole.warn('Log container not found, cannot update display');
+      }
+      return;
+    }
     
-    // Clear current logs
-    this.logContainer.innerHTML = '';
-    
-    // Add each log entry
-    this.logs.forEach(log => {
-      const logElement = document.createElement('div');
-      logElement.className = `log-entry log-${log.type}`;
+    try {
+      // Clear current logs
+      this.logContainer.innerHTML = '';
       
-      // Set style based on log type
-      let color = '#fff';
-      switch (log.type) {
-        case 'info':
-          color = '#58a6ff';
-          break;
-        case 'warn':
-          color = '#e3b341';
-          break;
-        case 'error':
-          color = '#f85149';
-          break;
-        case 'debug':
-          color = '#8b949e';
-          break;
+      if (this.logs.length === 0) {
+        // Add a placeholder message if no logs
+        const placeholderElement = document.createElement('div');
+        placeholderElement.className = 'log-entry log-info';
+        placeholderElement.textContent = 'No logs to display yet. Actions will be logged here.';
+        this.logContainer.appendChild(placeholderElement);
+        return;
       }
       
-      logElement.style.color = color;
+      // Add each log entry
+      this.logs.forEach(log => {
+        const logElement = document.createElement('div');
+        logElement.className = `log-entry log-${log.type}`;
+        
+        // Add timestamp if enabled
+        let logText = '';
+        if (this.showTimestamp) {
+          logText += `[${log.timestamp}] `;
+        }
+        
+        // Add message
+        logText += log.message;
+        
+        logElement.textContent = logText;
+        this.logContainer.appendChild(logElement);
+      });
       
-      // Add timestamp if enabled
-      let logText = '';
-      if (this.showTimestamp) {
-        logText += `[${log.timestamp}] `;
+      // Scroll to bottom
+      this.logContainer.scrollTop = this.logContainer.scrollHeight;
+    } catch (e) {
+      if (this.originalConsole) {
+        this.originalConsole.error('Error updating log display:', e);
       }
-      
-      // Add message
-      logText += log.message;
-      
-      logElement.textContent = logText;
-      this.logContainer.appendChild(logElement);
-    });
-    
-    // Scroll to bottom
-    this.logContainer.scrollTop = this.logContainer.scrollHeight;
+    }
   },
   
   /**
@@ -307,8 +311,12 @@ const ConsoleLoggerModule = {
    * Clear all logs
    */
   clearLogs: function() {
-    this.logs = [];
-    this.updateLogDisplay();
+    if (window.GlobalLogger) {
+      window.GlobalLogger.clearLogs();
+    } else {
+      this.logs = [];
+      this.updateLogDisplay();
+    }
     this.saveState();
   },
   
@@ -317,7 +325,10 @@ const ConsoleLoggerModule = {
    * @param {boolean} show - Whether to show or hide the logger
    */
   toggleVisibility: function(show) {
-    if (!this.container || !this.showButton) return;
+    if (!this.container || !this.showButton) {
+      this.addInternalLogEntry('warn', 'Container or show button not found, cannot toggle visibility');
+      return;
+    }
     
     if (show === undefined) {
       show = this.container.style.display === 'none';
@@ -325,6 +336,9 @@ const ConsoleLoggerModule = {
     
     this.container.style.display = show ? 'flex' : 'none';
     this.showButton.style.display = show ? 'none' : 'block';
+    
+    // Log the visibility change
+    this.addInternalLogEntry('info', `Console logger is now ${show ? 'visible' : 'hidden'}`);
     
     // Save state
     this.saveState();
@@ -384,4 +398,5 @@ const ConsoleLoggerModule = {
 };
 
 // Export the module
-window.ConsoleLoggerModule = ConsoleLoggerModule;
+window.ConsoleLoggerModule = ConsoleLoggerModule;// console-logger-module.js - Custom console logger that displays logs in a floating window
+

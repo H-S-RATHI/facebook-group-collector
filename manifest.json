@@ -33,12 +33,13 @@
     {
       "resources": [
         "icons/*",
-        "modmodule/ule/utility-module.js",
-        "module/module/storage-module.js",
-        "module/module/group-module.js",
-        "module/module/data-collection-module.js",
+        "module/utility-module.js",
+        "module/storage-module.js",
+        "module/group-module.js",
+        "module/data-collection-module.js",
         "module/ui-module.js",
-        "module/console-loggermodule/ui-module.js"
+        "module/global-logger.js",
+        "module/console-logger-module.js"
       ],
       "matches": ["<all_urls>"]
     }
