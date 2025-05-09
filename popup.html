@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Facebook Navigator</title>
+  <title>Facebook Group Data Collector</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      width: 300px;
+      width: 400px;
       padding: 15px;
-      text-align: center;
     }
     h1 {
       color: #1877f2; /* Facebook blue */
       font-size: 20px;
       margin-bottom: 20px;
+      text-align: center;
     }
     button {
       background-color: #1877f2; /* Facebook blue */
@@ -25,6 +25,7 @@
       font-size: 16px;
       cursor: pointer;
       transition: background-color 0.3s;
+      margin: 10px 0;
     }
     button:hover {
       background-color: #166fe5;
@@ -34,11 +35,107 @@
       height: 80px;
       margin-bottom: 15px;
     }
+    .section {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 15px;
+    }
+    .section:last-child {
+      border-bottom: none;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    #groupList {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    .group-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    .group-item:hover {
+      background-color: #f5f5f5;
+    }
+    .group-item.selected {
+      background-color: #e7f3ff;
+    }
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+      display: none;
+    }
+    .progress-container {
+      width: 100%;
+      background-color: #ddd;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      height: 20px;
+      background-color: #1877f2;
+      border-radius: 4px;
+      width: 0%;
+      text-align: center;
+      line-height: 20px;
+      color: white;
+    }
   </style>
 </head>
 <body>
-  <h1>Facebook Navigator</h1>
-  <button id="start-button">Go to Facebook</button>
+  <h1>Facebook Group Data Collector</h1>
+  
+  <div class="section">
+    <label for="step">Current Step:</label>
+    <select id="step" disabled>
+      <option value="1" selected>1. Select Facebook Groups</option>
+      <option value="2">2. Collect Post Data</option>
+    </select>
+  </div>
+  
+  <div id="step1" class="section">
+    <button id="fetch-groups">Fetch My Facebook Groups</button>
+    <div id="groupList" style="display: none;"></div>
+    <div id="selectedGroups" style="display: none;">
+      <label>Selected Groups:</label>
+      <div id="selectedGroupsList"></div>
+    </div>
+    <button id="confirm-groups" style="display: none;">Confirm Selected Groups</button>
+  </div>
+  
+  <div id="step2" class="section" style="display: none;">
+    <label for="postCount">Number of Posts to Collect per Group:</label>
+    <input type="number" id="postCount" min="1" max="100" value="10">
+    
+    <button id="start-collection">Start Data Collection</button>
+    
+    <div id="status" class="status">
+      <div id="statusText">Preparing to collect data...</div>
+      <div class="progress-container">
+        <div id="progressBar" class="progress-bar">0%</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <button id="export-data" style="display: none;">Export Collected Data (CSV)</button>
+  </div>
   
   <script src="popup.js"></script>
 </body>
