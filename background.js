@@ -43,59 +43,29 @@ const BackgroundConsole = {
 
 // Handle port-based communication
 chrome.runtime.onConnect.addListener((port) => {
-    console.log('Connected:', port.name);
-    
     port.onMessage.addListener(async (message) => {
         try {
-            if (message && typeof message === 'object') {
-                if (message.type === 'log' && message.entry) {
-                    await BackgroundConsole.log(message.entry.message, message.entry.level);
-                    port.postMessage({
-                        type: 'logResponse',
-                        message: 'Log received successfully'
-                    });
-                } else if (message.type === 'clearLogs') {
-                    try {
-                        // Remove the logs
-                        await chrome.storage.local.remove('extensionLogs');
-                        
-                        // Send response
-                        port.postMessage({
-                            type: 'logResponse',
-                            message: 'Logs cleared successfully'
-                        });
-                    } catch (error) {
-                        console.error('Error clearing logs:', error);
-                        port.postMessage({
-                            type: 'logResponse',
-                            message: 'Error clearing logs: ' + error.message
-                        });
-                    }
-                }
+            if (message.type === 'log' && message.entry) {
+                await BackgroundConsole.log(message.entry.message, message.entry.level);
+                port.postMessage({
+                    type: 'logResponse',
+                    message: 'Log received successfully'
+                });
+            } else if (message.type === 'clearLogs') {
+                await chrome.storage.local.remove('extensionLogs');
+                port.postMessage({
+                    type: 'logResponse',
+                    message: 'Logs cleared successfully'
+                });
             }
         } catch (error) {
-            console.error('Error handling port message:', error);
+            BackgroundConsole.error('Error handling port message:', error);
             port.postMessage({
                 type: 'logResponse',
                 message: 'Error handling message: ' + error.message
             });
         }
     });
-});
-
-// Handle direct messages as fallback
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    try {
-        if (message && typeof message === 'object') {
-            if (message.type === 'log' && message.entry) {
-                BackgroundConsole.log(message.entry.message, message.entry.level);
-            } else if (message.type === 'clearLogs') {
-                chrome.storage.local.remove('extensionLogs');
-            }
-        }
-    } catch (error) {
-        console.error('Error handling message:', error);
-    }
 });
 
 // Initialize logging when extension starts

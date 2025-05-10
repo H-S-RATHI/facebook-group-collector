@@ -6,13 +6,6 @@ try {
     port = chrome.runtime.connect({
         name: 'log-viewer'
     });
-    
-    // Listen for responses
-    port.onMessage.addListener((response) => {
-        if (response.type === 'logResponse') {
-            console.log('Log response received:', response.message);
-        }
-    });
 } catch (error) {
     console.error('Error connecting to background script:', error.message || 'Unknown error');
 }
@@ -20,7 +13,6 @@ try {
 // Simple logging function for popup
 function log(message, level = 'info') {
     const timestamp = new Date().toISOString();
-    console.log(`[${level}] ${timestamp}: ${message}`);
     
     // Try to send to background script if available
     try {
@@ -47,11 +39,22 @@ window.error = (message) => log(message, 'error');
 window.debug = (message) => log(message, 'debug');
 
 document.addEventListener('DOMContentLoaded', function() {
-    const logsContainer = document.getElementById('logs');
-    const clearLogsButton = document.getElementById('clear-logs');
-    let isTextSelected = false;
+    // Load and display logs
+    chrome.storage.local.get('extensionLogs', function(data) {
+        const logs = data.extensionLogs || [];
+        displayLogs(logs);
+    });
 
-    // Add clear logs button functionality if button exists
+    // Update logs every 500ms
+    setInterval(function() {
+        chrome.storage.local.get('extensionLogs', function(data) {
+            const logs = data.extensionLogs || [];
+            displayLogs(logs);
+        });
+    }, 500);
+
+    // Add clear logs button functionality
+    const clearLogsButton = document.getElementById('clear-logs');
     if (clearLogsButton) {
         clearLogsButton.addEventListener('click', () => {
             if (confirm('Are you sure you want to clear all logs?')) {
@@ -64,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     // Clear the display
+                    const logsContainer = document.getElementById('logs');
                     if (logsContainer) {
                         logsContainer.innerHTML = '';
                     }
@@ -77,32 +81,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Check if text is selected
-    logsContainer.addEventListener('selectstart', () => {
-        isTextSelected = true;
-    });
-
-    logsContainer.addEventListener('mouseup', () => {
-        isTextSelected = false;
-    });
-
-    // Load and display logs
-    chrome.storage.local.get('extensionLogs', function(data) {
-        const logs = data.extensionLogs || [];
-        displayLogs(logs);
-    });
-
-    // Update logs every 500ms
-    setInterval(function() {
-        if (!isTextSelected) {
-            chrome.storage.local.get('extensionLogs', function(data) {
-                const logs = data.extensionLogs || [];
-                displayLogs(logs);
-            });
-        }
-    }, 500);
-
     function displayLogs(logs) {
+        const logsContainer = document.getElementById('logs');
+        if (!logsContainer) {
+            console.error('Logs container not found');
+            return;
+        }
+        
         logsContainer.innerHTML = '';
         logs.forEach(log => {
             const logDiv = document.createElement('div');
