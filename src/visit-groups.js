@@ -28,7 +28,7 @@ class VisitGroups {
               extensionLogs: newLogs.slice(-100)
             });
           } catch (error) {
-            console.error('Error storing log:', error);
+            await window.BackgroundConsole.error('Error storing log:', error);
           }
         },
         async info(message) { await this.log(message, 'info'); },
@@ -76,7 +76,7 @@ class VisitGroups {
     try {
       await window.BackgroundConsole.log(`Visiting group ${this.currentGroupIndex + 1}/${this.groups.length}: ${groupUrl}`);
     } catch (error) {
-      console.error('Error logging message:', error);
+      await window.BackgroundConsole.error('Error logging message:', error);
     }
 
     try {
@@ -107,7 +107,7 @@ class VisitGroups {
       try {
         await window.BackgroundConsole.error('Error visiting group: ' + error.message);
       } catch (logError) {
-        console.error('Error logging:', logError);
+        await window.BackgroundConsole.error('Error logging:', logError);
       }
       this.currentGroupIndex++;
       this.visitNextGroup();

@@ -18,6 +18,7 @@ class AddGroup {
     // Validate the URL
     if (!this.isValidGroupUrl(url)) {
       alert('Please enter a valid Facebook group URL');
+      window.BackgroundConsole.log('Please enter a valid Facebook group URL')
       return false;
     }
 

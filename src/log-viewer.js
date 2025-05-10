@@ -1,6 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
     const logsContainer = document.getElementById('logs');
+    const clearLogsButton = document.getElementById('clear-logs');
     
+    // Add clear logs button functionality
+    clearLogsButton.addEventListener('click', async () => {
+        if (confirm('Are you sure you want to clear all logs?')) {
+            try {
+                await chrome.storage.local.remove('extensionLogs');
+                logsContainer.innerHTML = '';
+                window.BackgroundConsole.info('All logs cleared');
+            } catch (error) {
+                window.BackgroundConsole.error('Error clearing logs: ' + error.message);
+            }
+        }
+    });
     // Load and display logs
     chrome.storage.local.get('extensionLogs', function(data) {
         const logs = data.extensionLogs || [];
