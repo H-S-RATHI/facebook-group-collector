@@ -9,6 +9,34 @@ class VisitGroups {
     
     // Add event listener for start button
     document.getElementById('start-button').addEventListener('click', () => this.startVisiting());
+    
+    // Initialize BackgroundConsole if not available
+    if (!window.BackgroundConsole) {
+      window.BackgroundConsole = {
+        async log(message, level = 'info') {
+          try {
+            const timestamp = new Date().toISOString();
+            const logEntry = {
+              message,
+              level,
+              timestamp
+            };
+
+            const { extensionLogs = [] } = await chrome.storage.local.get('extensionLogs');
+            const newLogs = [...extensionLogs, logEntry];
+            await chrome.storage.local.set({
+              extensionLogs: newLogs.slice(-100)
+            });
+          } catch (error) {
+            console.error('Error storing log:', error);
+          }
+        },
+        async info(message) { await this.log(message, 'info'); },
+        async warning(message) { await this.log(message, 'warning'); },
+        async error(message) { await this.log(message, 'error'); },
+        async debug(message) { await this.log(message, 'debug'); }
+      };
+    }
   }
 
   // Start visiting groups
@@ -45,6 +73,11 @@ class VisitGroups {
 
     const groupUrl = this.groups[this.currentGroupIndex];
     this.updateStatus(`Visiting group ${this.currentGroupIndex + 1}/${this.groups.length}: ${groupUrl}`);
+    try {
+      await window.BackgroundConsole.log(`Visiting group ${this.currentGroupIndex + 1}/${this.groups.length}: ${groupUrl}`);
+    } catch (error) {
+      console.error('Error logging message:', error);
+    }
 
     try {
       // Create a new tab
@@ -71,7 +104,11 @@ class VisitGroups {
       this.currentGroupIndex++;
       this.visitNextGroup();
     } catch (error) {
-      console.error('Error visiting group:', error);
+      try {
+        await window.BackgroundConsole.error('Error visiting group: ' + error.message);
+      } catch (logError) {
+        console.error('Error logging:', logError);
+      }
       this.currentGroupIndex++;
       this.visitNextGroup();
     }

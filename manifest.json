@@ -3,7 +3,7 @@
   "name": "Facebook Group Data Collector",
   "version": "1.0",
   "description": "Collect and export data from your Facebook groups",
-  "permissions": ["storage", "activeTab", "scripting", "downloads", "tabs"],
+  "permissions": ["storage", "activeTab", "scripting", "downloads", "tabs", "contextMenus"],
   "host_permissions": ["https://*.facebook.com/*", "https://*.facebook.com/groups/*"],
   "action": {
     "default_popup": "popup.html",
@@ -20,7 +20,6 @@
     {
       "matches": ["https://*.facebook.com/*"],
       "js": ["lib/papaparse.min.js", "content.js"],
-      "css": ["css/console-logger.css"],
       "all_frames": true
     }
   ],
@@ -33,13 +32,8 @@
     {
       "resources": [
         "icons/*",
-        "module/utility-module.js",
-        "module/storage-module.js",
-        "module/group-module.js",
-        "module/data-collection-module.js",
-        "module/ui-module.js",
-        "module/global-logger.js",
-        "module/console-logger-module.js"
+        "src/log-viewer.html",
+        "src/log-viewer.js"
       ],
       "matches": ["<all_urls>"]
     }
