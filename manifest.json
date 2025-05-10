@@ -3,8 +3,8 @@
   "name": "Facebook Group Data Collector",
   "version": "1.0",
   "description": "Collect and export data from your Facebook groups",
-  "permissions": ["storage", "activeTab", "scripting", "downloads"],
-  "host_permissions": ["https://*.facebook.com/*"],
+  "permissions": ["storage", "activeTab", "scripting", "downloads", "tabs"],
+  "host_permissions": ["https://*.facebook.com/*", "https://*.facebook.com/groups/*"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
