@@ -1,19 +1,12 @@
 // Group processing functions
-function addGroup() {
-  const groupUrl = document.getElementById('group-url').value.trim();
-  if (groupUrl && groupUrl.startsWith('https://facebook.com/groups/')) {
-    if (window.GroupProcessorModule.addGroup(groupUrl)) {
-      alert('Group added successfully!');
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize the AddGroup module
+  if (window.AddGroup) {
+    // Add event listener for add group button
+    document.getElementById('add-group').addEventListener('click', () => {
+      const groupUrl = document.getElementById('group-url').value.trim();
+      window.AddGroup.addGroup(groupUrl);
       document.getElementById('group-url').value = '';
-    } else {
-      alert('Group already exists in the queue');
-    }
-  } else {
-    alert('Please enter a valid Facebook group URL');
+    });
   }
-
-}
-
-
-
-
+});
